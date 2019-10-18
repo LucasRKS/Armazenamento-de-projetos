@@ -1,6 +1,7 @@
 const express = require('express');
 
 const app = express();
+app.use(express.json());
 
 //Variável exemplo de como deve ser um projeto
 const projectsExample = [{
@@ -19,12 +20,14 @@ const projects = [];
 */
 //Lista todos os projetos
 app.get('/projects', (req,res) => {
-    return;
+    return res.json(projects);
 });
 
 //Insere um projeto novo
-app.post('/projects', (req,res) => {
-    return;
+app.post('/projects', (req,res) => {    
+    projects.push(req.body);
+
+    return res.json(projects)
 });
 
 //Insere tasks novas
