@@ -3,17 +3,32 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-//Variável exemplo de como deve ser um projeto
-const projectsExample = [{
-    id: 1, 
-    title: "Projeto Node.js", 
-    tasks: ["Nova Tarefa"]
-}];
 const projects = [];
+let reqs = 0;
 
 /*
     Middlewares
 */
+const requestsCount = (req,res,next) => {
+    const reqsNumber = reqs++;
+
+    console.log(`Request number ${reqsNumber}`);
+    
+    return next();
+}
+
+app.use(requestsCount);
+
+const checkProjectID = (req,res,next) => {
+    const { id } = req.params;
+
+    const exists = projects.find(p => p.id === id);
+
+    if(!exists)
+        return res.status(400).json({ error: "Project not found." });
+
+    return next();
+}
 
 /*
     Rotas
@@ -24,27 +39,53 @@ app.get('/projects', (req,res) => {
 });
 
 //Insere um projeto novo
-app.post('/projects', (req,res) => {    
-    projects.push(req.body);
+app.post('/projects', (req,res) => {
+    const push = 
+    {
+        "id": req.body.id,
+        "title": req.body.title,
+        "tasks": req.body.tasks,
+    }    
+
+    projects.push(push);
 
     return res.json(projects)
 });
 
-//Insere tasks novas
-app.post('/projects/:id/tasks', (req,res) => {
-    return;
-});
-
 //Altera um projeto
-app.put('/projects/:id', (req,res) => {
-    return;
+app.put('/projects/:id', checkProjectID, (req,res) => {
+    const { id } = req.params;
+    const { title } = req.body;
+    
+    const project = projects.find(p => p.id === id);
+
+    project.title = title;
+    
+    return res.json(projects);
 });
 
 //Deleta um projeto
-app.delete('/projects/:id', (req,res) => {
-    return;
+app.delete('/projects/:id', checkProjectID, (req,res) => {
+    const { id } = req.params;
+
+    const projectIndex = projects.findIndex(p => p.id === id);
+
+    projects.splice(projectIndex, 1);
+
+    return res.send();
 });
 
+//Insere tasks novas
+app.post('/projects/:id/tasks', checkProjectID, (req,res) => {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    const project = projects.find(p => p.id === id);
+
+    project.tasks.push(title);
+
+    return res.json(project);
+});
 
 /*
     Porta da aplicação
